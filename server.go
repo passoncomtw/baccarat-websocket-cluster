@@ -1,3 +1,11 @@
+// 負責web socket的升級,以及追蹤client狀態
+// 故過manager 管理所有client
+// 跟REST風格比 websocket是一個生命週期的管理 為方便管理會區分manager 跟client
+// 聊天室 會出現群組 個別聊天 確認是否上下線 這些東東 因此納管client狀態很重要
+// 同時也要確認連線存活,判斷是否放出資源,雲端廠商限制連線 及cpu ram
+// 所以要有一個addclient deleteclient 來管理clientlist
+// 會有client跟manager物件
+// manager有serveWs addClient removeClient等物件方法
 package main
 
 import (
@@ -35,7 +43,8 @@ func NewManager() *Manager {
 }
 
 // serveWS is a HTTP Handler that the has the Manager that allows connections
-// 使用指針操作實際物件
+// 使用指針操作實際物件 用來管理ws連線升級 客戶端邏輯也可以在這
+
 func (m *Manager) serveWS(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("New connection")

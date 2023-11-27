@@ -1,8 +1,13 @@
+// client.go規範client物件內容,有ws連線 manager物件 通道
+// 通道是拿來buffer要寫入的資訊 在既有的同步下的解決方案
+//
+
 package main
 
 import (
-	"github.com/gorilla/websocket"
 	"log"
+
+	"github.com/gorilla/websocket"
 )
 
 // ClientList is a map used to help manage a map of clients
@@ -58,36 +63,41 @@ func (c *Client) readMessages() {
 		// Will be replaced soon
 		for wsclient := range c.manager.clients {
 			wsclient.egress <- payload
+			log.Println("go to write messages")
 		}
 	}
 }
 
-// writeMessages is a process that listens for new messages to output to the Client
 func (c *Client) writeMessages() {
+	// 在 goroutine 完成時，確保執行 removeClient 方法來從 manager 中移除此客戶端
 	defer func() {
 		// Graceful close if this triggers a closing
 		c.manager.removeClient(c)
+		log.Println("i close the client")
 	}()
 
+	// 無限循環，等待要發送的消息
 	for {
+		// 使用 select 監聽多個 channel，這裡只監聽 egress channel
 		select {
 		case message, ok := <-c.egress:
-			// Ok will be false Incase the egress channel is closed
+			// 檢查 egress channel 是否已經關閉
 			if !ok {
-				// Manager has closed this connection channel, so communicate that to frontend
+				// 如果 egress channel 被關閉，向前端發送關閉消息
 				if err := c.connection.WriteMessage(websocket.CloseMessage, nil); err != nil {
-					// Log that the connection is closed and the reason
+					// 如果寫入關閉消息時發生錯誤，記錄並結束 goroutine
 					log.Println("connection closed: ", err)
 				}
-				// Return to close the goroutine
+				// 返回以結束 goroutine
 				return
 			}
-			// Write a Regular text message to the connection
+			// 將文本消息寫入 WebSocket 連線
 			if err := c.connection.WriteMessage(websocket.TextMessage, message); err != nil {
+				// 如果寫入消息時發生錯誤，記錄錯誤
 				log.Println(err)
 			}
+			log.Println("i got ", message)
 			log.Println("sent message")
 		}
-
 	}
 }
