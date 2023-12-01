@@ -46,6 +46,8 @@ func (c *Client) readMessages() {
 	for {
 		// ReadMessage is used to read the next message in queue
 		// in the connection
+		//主要有兩種類型：文本消息和二進制消息。當你使用 ReadMessage 方法讀取一條消息時，
+		// 可以用const (MessageTypeText    = 1) 這總分組方法弄出來的.
 		messageType, payload, err := c.connection.ReadMessage()
 
 		if err != nil {

@@ -2,6 +2,9 @@
 使用gorilla/websocket進行基本websocket練習,同時研究使用哪款框架作為後續使用
 
 
+預計路間
+loginCheck(jwt)->ws(origin check)->限制payload大小規則的SetReadLimit->readMessages->routeEvent->Eventhandler->some goroutine function(整個過程都會用ping pong check ws連線對方活著)
+
 ## web socket是啥
 如果你要做一個網路聊天室,就會需要去server查詢對面發了啥訊息給你,之後你再發給他,比較笨的方法就是一直輪尋server,看資訊是否有更新,於是後來開發的雙向通訊,例如RTC,websockets這些,其中一個目的就是要做到讓server可以主動告知client訊息到了,而不用讓client端一直來問！
 
@@ -46,8 +49,6 @@ gvm gos (installed)
 ## 大致開發順序
 endpoint->ws-> readMessages-> sendMessages 確認東西來回,之後變成endpoint->ws->readMessages->routeEvent->Eventhandler->some goroutine function
 
-全套
-loginCheck(jwt)->ws(origin check)->限制payload大小規則的SetReadLimit->readMessages->routeEvent->Eventhandler->some goroutine function(整個過程都會用ping pong check ws連線對方活著)
 
 
 // 負責web socket的升級,以及追蹤client狀態
