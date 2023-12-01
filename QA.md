@@ -1,0 +1,4 @@
+# 記錄遇到的問題
+1. 一開始websocket package取名跟gorila一樣叫做websocket會報錯,重複package名稱
+2.  因為把main跟websocket拆開來成為兩個package,並在main做import websocketTool,那原本只有main package時成立的manager.serveWS,會報錯,因為package要導出的資料必須為大寫開頭,所以要把package websocketTool那邊的manager.serveWS改成大寫ServeWs.
+3.  

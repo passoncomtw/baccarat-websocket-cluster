@@ -2,7 +2,7 @@
 // 通道是拿來buffer要寫入的資訊 在既有的同步下的解決方案
 //
 
-package main
+package websocketTool
 
 import (
 	"log"
@@ -11,18 +11,18 @@ import (
 )
 
 // ClientList is a map used to help manage a map of clients
-type ClientList map[*Client]bool
+// type ClientList map[*Client]bool
 
 // Client is a websocket client, basically a frontend visitor
-type Client struct {
-	// the websocket connection
-	connection *websocket.Conn
+// type Client struct {
+// 	// the websocket connection
+// 	connection *websocket.Conn
 
-	// manager is the manager used to manage the client
-	manager *Manager
-	// egress is used to avoid concurrent writes on the WebSocket
-	egress chan []byte
-}
+// 	// manager is the manager used to manage the client
+// 	manager *Manager
+// 	// egress is used to avoid concurrent writes on the WebSocket
+// 	egress chan []byte
+// }
 
 // NewClient is used to initialize a new Client with all required values initialized
 func NewClient(conn *websocket.Conn, manager *Manager) *Client {

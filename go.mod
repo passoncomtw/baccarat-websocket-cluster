@@ -1,4 +1,4 @@
-module websocket_pt
+module gowebsocket
 
 go 1.21.4
 

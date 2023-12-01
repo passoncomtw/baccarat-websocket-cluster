@@ -6,13 +6,13 @@
 // 所以要有一個addclient deleteclient 來管理clientlist
 // 會有client跟manager物件
 // manager有serveWs addClient removeClient等物件方法
-package main
+
+package websocketTool
 
 import (
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
-	"sync"
 )
 
 var (
@@ -26,26 +26,44 @@ var (
 )
 
 // Manager is used to hold references to all Clients Registered, and Broadcasting etc
-type Manager struct {
-	clients ClientList
-	// Using a syncMutex here to be able to lcok state before editing clients
-	// Could also use Channels to block
-	sync.RWMutex
-}
+// type Manager struct {
+// 	clients ClientList
+// 	// Using a syncMutex here to be able to lcok state before editing clients
+// 	// Could also use Channels to block
+// 	sync.RWMutex
+// }
 
 // NewManager is used to initalize all the values inside the manager
 // return一個物件的指標
 // NewManager is used to initalize all the values inside the manager
+//
+//	func NewManager() *Manager {
+//		return &Manager{
+//			clients: make(ClientList),
+//		}
+//	}
 func NewManager() *Manager {
 	return &Manager{
 		clients: make(ClientList),
 	}
 }
 
+func (m *Manager) ServeWs(w http.ResponseWriter, r *http.Request) {
+	log.Println("New connection")
+	// Begin by upgrading the HTTP request
+	conn, err := websocketUpgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Panicln(err)
+		return
+	}
+	client := NewClient(conn, m)
+	m.addClient(client)
+}
+
 // serveWS is a HTTP Handler that the has the Manager that allows connections
 // 使用指針操作實際物件 用來管理ws連線升級 客戶端邏輯也可以在這
 
-func (m *Manager) serveWS(w http.ResponseWriter, r *http.Request) {
+func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("New connection")
 	// Begin by upgrading the HTTP request
