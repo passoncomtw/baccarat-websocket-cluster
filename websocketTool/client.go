@@ -6,7 +6,6 @@ package websocketTool
 
 import (
 	"log"
-
 	"github.com/gorilla/websocket"
 )
 
@@ -32,74 +31,72 @@ func NewClient(conn *websocket.Conn, manager *Manager) *Client {
 		egress:     make(chan []byte),
 	}
 }
-
-// readMessages will start the client to read messages and handle them
-// appropriatly.
-// This is suppose to be ran as a goroutine
-func (c *Client) readMessages() {
-	defer func() {
-		// Graceful Close the Connection once this
-		// function is done
+/* 這邊是ws接受部分邏輯
+readMessages會操作client(ws)讀取js過來的訊息,因此用for卡住,所以一定要用goroutine
+需要具備ws讀訊息,並判斷是否err非nil,並記錄
+ 收到訊息後往後邊處理邏輯丟*/
+func(c *Client) GetClientData(){
+	// 當func return時,代表client端斷線執行操作remove client
+	defer func(){
 		c.manager.removeClient(c)
 	}()
-	// Loop Forever
 	for {
-		// ReadMessage is used to read the next message in queue
-		// in the connection
-		//主要有兩種類型：文本消息和二進制消息。當你使用 ReadMessage 方法讀取一條消息時，
-		// 可以用const (MessageTypeText    = 1) 這總分組方法弄出來的.
-		messageType, payload, err := c.connection.ReadMessage()
 
-		if err != nil {
-			// If Connection is closed, we will Recieve an error here
-			// We only want to log Strange errors, but simple Disconnection
+		// 讀取ws訊息,為了code可讀性就不跟if結合！
+		messageType,payload,err:=c.connection.ReadMessage()
+		if err != nil{
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error reading message: %v", err)
 			}
-			break // Break the loop to close conn & Cleanup
+
+			break	
 		}
 		log.Println("MessageType: ", messageType)
 		log.Println("Payload: ", string(payload))
-
-		// Hack to test that WriteMessages works as intended
-		// Will be replaced soon
-		for wsclient := range c.manager.clients {
-			wsclient.egress <- payload
+		// 這邊測試把資料丟到通道,另外一邊用ooroutine執行的循環通道理論上會接資料打印
+		for wsClient := range c.manager.clients {
+			wsClient.egress <- payload
 			log.Println("go to write messages")
 		}
-	}
+	}	
 }
-
-func (c *Client) writeMessages() {
-	// 在 goroutine 完成時，確保執行 removeClient 方法來從 manager 中移除此客戶端
+/* 當需要向client端發送訊息會用此發送
+為一個goroutine,用for卡住循環讀取通道以拿到訊息,因為main在跑就不會退出
+*/
+func(c *Client)SendMessages(){
+	// 如果ws connection,代表客戶沒了,把通道關掉放出資源
 	defer func() {
-		// Graceful close if this triggers a closing
-		c.manager.removeClient(c)
-		log.Println("i close the client")
+		// 只要把通道關掉就好,不能把client砍了
+		c.connection.Close()
+		log.Println("close the client ")
 	}()
 
-	// 無限循環，等待要發送的消息
-	for {
-		// 使用 select 監聽多個 channel，這裡只監聽 egress channel
+	/* 做循環通道讀取 , 從通道拿資料並向每個客戶端發資料*/
+	for{
+
 		select {
-		case message, ok := <-c.egress:
-			// 檢查 egress channel 是否已經關閉
+		case wsMessage,ok:= <-c.egress:
+			// 如果來源通道被關需要return關閉go routine
 			if !ok {
-				// 如果 egress channel 被關閉，向前端發送關閉消息
-				if err := c.connection.WriteMessage(websocket.CloseMessage, nil); err != nil {
-					// 如果寫入關閉消息時發生錯誤，記錄並結束 goroutine
-					log.Println("connection closed: ", err)
+				// 定義型態及內容
+				if err:=c.connection.WriteMessage(websocket.CloseMessage,nil);err != nil {
+					log.Println("ws connection has close,err is",err)
+					// 這邊一定要寫return,寫break只會跳出select,造成無窮迴圈
+					return
 				}
-				// 返回以結束 goroutine
-				return
 			}
-			// 將文本消息寫入 WebSocket 連線
-			if err := c.connection.WriteMessage(websocket.TextMessage, message); err != nil {
-				// 如果寫入消息時發生錯誤，記錄錯誤
-				log.Println(err)
-			}
-			log.Println("i got ", message)
-			log.Println("sent message")
+			// 如果ws連線寫入錯誤要紀錄
+			if err:=c.connection.WriteMessage(websocket.TextMessage,wsMessage); err != nil {
+				log.Println("ws connection has some err:",err)
+			} else{
+			// 都沒問題,資訊就會發給指定客戶
+			log.Println("資訊已寄出給",c)
+		}
+
+		}
+
 		}
 	}
-}
+
+
+

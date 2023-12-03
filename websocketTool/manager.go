@@ -44,7 +44,7 @@ var (
 //	}
 func NewManager() *Manager {
 	return &Manager{
-		clients: make(ClientList),
+		clients: make(ClientMap),
 	}
 }
 
@@ -75,34 +75,35 @@ func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 
 	// Create New Client
 	client := NewClient(conn, m)
-	// Add the newly created client to the manager
+	// 將client加入manager管理內,後續ws要刪除或新增會透過manager操作
 	m.addClient(client)
+	// 確定新增client以後就開始讀客戶給的東西囉
 	// Start the read / write processes
-	go client.readMessages()
-	go client.writeMessages()
+	go client.GetClientData()
+	go client.SendMessages()
+	log.Println("ServeWs結束囉,不過因為主進程還在跑所以goroutine還活著")
 }
 
-// addClient will add clients to our clientList
-func (m *Manager) addClient(client *Client) {
-	// Lock so we can manipulate
+func(m *Manager) addClient(client *Client) {
+	// 讓多個goroutine依順序寫入
 	m.Lock()
 	defer m.Unlock()
 
-	// Add Client
-	m.clients[client] = true
+	// 把client加進來到Map 對應bool拿來做刪除確認
+	m.clients[client]=true
+
 }
 
-// removeClient will remove the client and clean up
 func (m *Manager) removeClient(client *Client) {
+	// 讓多個goroutine依順序寫入
 	m.Lock()
 	defer m.Unlock()
-
-	// Check if Client exists, then delete it
-	// 這格式要複習！
-	if _, ok := m.clients[client]; ok {
-		// close connection
+	// map內建判斷 如果沒有該ｋｅｙ 會在第二個return值給false
+	if _,ok:= m.clients[client]; ok{
 		client.connection.Close()
-		// remove
-		delete(m.clients, client)
+		delete(m.clients,client)
 	}
 }
+
+
+
