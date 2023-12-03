@@ -7,12 +7,13 @@
 // 會有client跟manager物件
 // manager有serveWs addClient removeClient等物件方法
 
-package websocketTool
+package websocketutil
 
 import (
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
+	"errors"
 )
 
 var (
@@ -23,46 +24,39 @@ var (
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 	}
+	ErrEventNotSupported = errors.New("this event type is not supported")
 )
 
-// Manager is used to hold references to all Clients Registered, and Broadcasting etc
-// type Manager struct {
-// 	clients ClientList
-// 	// Using a syncMutex here to be able to lcok state before editing clients
-// 	// Could also use Channels to block
-// 	sync.RWMutex
-// }
-
-// NewManager is used to initalize all the values inside the manager
-// return一個物件的指標
-// NewManager is used to initalize all the values inside the manager
-//
-//	func NewManager() *Manager {
-//		return &Manager{
-//			clients: make(ClientList),
-//		}
-//	}
 func NewManager() *Manager {
-	return &Manager{
+	m:= &Manager{
 		clients: make(ClientMap),
+		handlers: make(map[string]EventHandler),
 	}
+	m.setupEventHandlers()
+	return m
 }
 
-func (m *Manager) ServeWs(w http.ResponseWriter, r *http.Request) {
-	log.Println("New connection")
-	// Begin by upgrading the HTTP request
-	conn, err := websocketUpgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Panicln(err)
-		return
-	}
-	client := NewClient(conn, m)
-	m.addClient(client)
+func(m *Manager)setupEventHandlers(){
+	// 現在還模做eventhandler先做ｌｏｇ而已
+	m.handlers[EventSendMessage]=SendMessageHandler
 }
+
+func(m *Manager)routeEvent(e Event, c *Client) error{
+	if handler,ok:=m.handlers[e.Type]; ok{
+		if err:=handler(e,c);err!= nil{
+			log.Println("some error with handler",e.Type)
+			return err //記得return
+		}
+		return nil
+	} else {
+		return ErrEventNotSupported
+	}
+	
+}
+
 
 // serveWS is a HTTP Handler that the has the Manager that allows connections
 // 使用指針操作實際物件 用來管理ws連線升級 客戶端邏輯也可以在這
-
 func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("New connection")
@@ -79,7 +73,7 @@ func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 	m.addClient(client)
 	// 確定新增client以後就開始讀客戶給的東西囉
 	// Start the read / write processes
-	go client.GetClientData()
+	go client.GetClientEvent()
 	go client.SendMessages()
 	log.Println("ServeWs結束囉,不過因為主進程還在跑所以goroutine還活著")
 }

@@ -1,4 +1,4 @@
-package websocketTool
+package websocketutil
 
 import (
 	"github.com/gorilla/websocket"
@@ -13,12 +13,13 @@ type Manager struct {
 	//那麼一個 goroutine 可能會成功，而另一個 goroutine 可能會失敗。
 	// 這可能會導致客戶端的連接保持打開狀態，並可能導致資源泄漏。
 	sync.RWMutex
+	handlers map[string]EventHandler
 }
 
 type Client struct {
 	manager *Manager
 
-	egress chan []byte
+	egress chan Event
 
 	connection *websocket.Conn
 	

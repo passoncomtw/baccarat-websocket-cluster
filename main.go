@@ -1,7 +1,7 @@
 package main
 
 import (
-	"gowebsocket/websocketTool"
+	"gowebsocket/websocketutil"
 	"log"
 	"net/http"
 )
@@ -9,7 +9,7 @@ import (
 // setupAPI will start all Routes and their Handlers
 func setupAPI() {
 	// Create a Manager instance used to handle WebSocket Connections
-	manager := websocketTool.NewManager()
+	manager := websocketutil.NewManager()
 
 	// Serve the ./frontend directory at Route /
 	http.Handle("/", http.FileServer(http.Dir("./frontend")))
