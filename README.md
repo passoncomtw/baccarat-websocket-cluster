@@ -2,9 +2,44 @@
 
 使用 gorilla/websocket 進行基本 websocket 練習,同時研究使用哪款框架作為後續使用
 
+使用步驟
+
+- 安裝套件
+
+```
+go mod download
+```
+
+- 執行程式,目前起在 3000 port,去 localhost:3000 看
+
+```
+go run *.go
+```
+
+目前可以接收格式以及功能
+
+- 填入訊息到 message 後廣播訊息給所有人,會用 type 判斷要解析的 payload 格式
+
+```json
+{ "type": "send_message", "payload": { "message": "sdfsdf", "from": "percy" } }
+```
+
+回應
+
+```json
+{
+  "type": "new_message",
+  "payload": {
+    "message": "sdfsdf",
+    "from": "percy",
+    "sent": "2023-12-04T01:35:59.83419+08:00"
+  }
+}
+```
+
 ## 後續工作
 
-loginCheck(jwt)->ws(origin check)->限制 payload 大小規則的 SetReadLimit->readMessages->routeEvent->Eventhandler->some goroutine function(整個過程都會用 ping pong check ws 連線對方活著)
+loginCheck(jwt)->ws(origin check)->限制 payload 大小規則的 SetReadLimit
 
 ## web socket 是啥
 

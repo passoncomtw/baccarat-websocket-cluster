@@ -124,6 +124,7 @@
         var newmessage = document.getElementById("message");
         if (newmessage != null) {
           let outgoingEvent = new SendMessageEvent(newmessage.value, "percy");
+
           sendEvent("send_message", outgoingEvent);
         }
         return false;
