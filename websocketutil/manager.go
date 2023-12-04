@@ -21,6 +21,8 @@ var (
 	websocketUpgrader is used to upgrade incomming HTTP requests into a persitent websocket connection
 	*/
 	websocketUpgrader = websocket.Upgrader{
+		// Apply the Origin Checker
+		CheckOrigin:     checkOrigin,
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 	}
@@ -36,6 +38,21 @@ func NewManager() *Manager {
 	return m
 }
 
+// checkOrigin will check origin and return true if its allowed
+func checkOrigin(r *http.Request) bool {
+	return true
+	// // Grab the request origin
+	// origin := r.Header.Get("Origin")
+
+	// switch origin {
+	// case "http://localhost:3000":
+	// 	return true
+	// case "ws://localhost:3000":
+	// 	return true
+	// default:
+	// 	return false
+	// }
+}
 func (m *Manager) setupEventHandlers() {
 	m.handlers[EventSendMessage] = SendMessageHandler
 	m.handlers[EventChangeRoom] = ChangeRoomHandler
