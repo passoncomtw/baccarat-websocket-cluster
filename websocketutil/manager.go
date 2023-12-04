@@ -10,10 +10,10 @@
 package websocketutil
 
 import (
+	"errors"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
-	"errors"
 )
 
 var (
@@ -28,32 +28,31 @@ var (
 )
 
 func NewManager() *Manager {
-	m:= &Manager{
-		clients: make(ClientMap),
+	m := &Manager{
+		clients:  make(ClientMap),
 		handlers: make(map[string]EventHandler),
 	}
 	m.setupEventHandlers()
 	return m
 }
 
-func(m *Manager)setupEventHandlers(){
-	// 現在還模做eventhandler先做ｌｏｇ而已
-	m.handlers[EventSendMessage]=SendMessageHandler
+func (m *Manager) setupEventHandlers() {
+	m.handlers[EventSendMessage] = SendMessageHandler
+	m.handlers[EventChangeRoom] = ChangeRoomHandler
 }
 
-func(m *Manager)routeEvent(e Event, c *Client) error{
-	if handler,ok:=m.handlers[e.Type]; ok{
-		if err:=handler(e,c);err!= nil{
-			log.Println("some error with handler",e.Type)
+func (m *Manager) routeEvent(e Event, c *Client) error {
+	if handler, ok := m.handlers[e.Type]; ok {
+		if err := handler(e, c); err != nil {
+			log.Println("some error with handler", e.Type)
 			return err //記得return
 		}
 		return nil
 	} else {
 		return ErrEventNotSupported
 	}
-	
-}
 
+}
 
 // serveWS is a HTTP Handler that the has the Manager that allows connections
 // 使用指針操作實際物件 用來管理ws連線升級 客戶端邏輯也可以在這
@@ -78,13 +77,13 @@ func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 	log.Println("ServeWs結束囉,不過因為主進程還在跑所以goroutine還活著")
 }
 
-func(m *Manager) addClient(client *Client) {
+func (m *Manager) addClient(client *Client) {
 	// 讓多個goroutine依順序寫入
 	m.Lock()
 	defer m.Unlock()
 
 	// 把client加進來到Map 對應bool拿來做刪除確認
-	m.clients[client]=true
+	m.clients[client] = true
 
 }
 
@@ -93,11 +92,8 @@ func (m *Manager) removeClient(client *Client) {
 	m.Lock()
 	defer m.Unlock()
 	// map內建判斷 如果沒有該ｋｅｙ 會在第二個return值給false
-	if _,ok:= m.clients[client]; ok{
+	if _, ok := m.clients[client]; ok {
 		client.connection.Close()
-		delete(m.clients,client)
+		delete(m.clients, client)
 	}
 }
-
-
-

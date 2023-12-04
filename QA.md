@@ -24,3 +24,32 @@
 		}
 	}()
 ```
+
+5. 如果type裡面值不建立就初始化物件,會發生啥？ 一樣可以建成物件,沒放值的屬性做成對應空值！
+```go
+type Event struct {
+	Type    string
+	Message string
+}
+
+func NewEvent() *Event {
+	return &Event{}
+}
+
+func (e *Event) ReadAttribute() {
+	fmt.Println(e.Message)
+	fmt.Println(e.Type)
+	fmt.Println("以上為所有屬性")
+}
+
+func main() {
+	fmt.Println("hello world")
+	e := NewEvent()
+	e.ReadAttribute()
+}
+//程式執行結果:
+// hello world
+
+
+// 以上為所有屬性
+```

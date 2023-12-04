@@ -22,7 +22,8 @@ type Client struct {
 	egress chan Event
 
 	connection *websocket.Conn
-	
+
+	chatroom string
 }
 
 type ClientMap map[*Client]bool

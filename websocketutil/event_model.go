@@ -14,21 +14,29 @@ import (
  5. 如果key不在的報錯
 */
 // 客戶端原始數據,也就是基本Event
-type Event struct{
-	Type string `json:"type"`
+type Event struct {
+	Type    string          `json:"type"`
 	Payload json.RawMessage `json:"payload"`
 }
 
-// 目前處理的Event的type名稱
-const(
-	EventSendMessage="send_message"
-	EventNewMessage="new_message"
+// 目前處理的Event的type名稱,屬於流量往server端
+const (
+	EventSendMessage = "send_message"
+	EventChangeRoom  = "change_room"
 )
+
+// 目前處理的Event的type名稱,屬於流量往client端
+const (
+	EventNewMessage = "new_message"
+)
+
+// 定義handler function格式
+type EventHandler func(event Event, c *Client) error
 
 // EventSendMessage會用的資料結構,轉成json
 type SendMessageEvent struct {
 	Message string `json:"message"`
-	From string `json:"from"`
+	From    string `json:"from"`
 }
 
 type NewMessageEvent struct {
@@ -36,5 +44,6 @@ type NewMessageEvent struct {
 	Sent time.Time `json:"sent"`
 }
 
-type EventHandler func(event Event,c *Client) error
-
+type ChangeRoomEvent struct {
+	Name string `json:"name"`
+}
