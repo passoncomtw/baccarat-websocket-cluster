@@ -1,0 +1,27 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      # - name: Build and Push Docker Image
+      #   run: |
+      #     docker build -t your-backend-image-name .
+      #     docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+      #     docker tag your-backend-image-name your-docker-registry/your-backend-image-name
+      #     docker push your-docker-registry/your-backend-image-name
+
+      - name: Execute Ansible Deployment
+        run: |
+          cd ~ && echo 123 > test.txt
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
