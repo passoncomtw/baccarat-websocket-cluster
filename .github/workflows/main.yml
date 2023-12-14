@@ -3,9 +3,6 @@ name: Create and publish a Docker image
 on:
   push:
     branches: ['main']
-permissions:
-  contents: 'read'
-  packages: 'write'
 
 
 # There is a single job in this workflow. It's configured to run on the latest available version of Ubuntu.
@@ -32,7 +29,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
-          images: ${{ github.repository }}
+          images: "ford"
           tags: |
             type=ref,event=branch
             type=ref,event=pr
