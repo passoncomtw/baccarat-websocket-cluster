@@ -45,5 +45,5 @@ jobs:
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ghcr.io/${{ steps.meta.outputs.tags }}
+          tags:  ghcr.io/${{ github.repository }}:latest
           # labels: ${{ steps.meta.outputs.labels }}
