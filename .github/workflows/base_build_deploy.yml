@@ -7,6 +7,9 @@ on:
     - "develop"
     tags:
       - 'v*'
+env:
+  IMAGE_NAME: ''
+
 # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
 permissions:
   contents: read
@@ -49,10 +52,8 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           # labels: ${{ steps.meta.outputs.labels }}
-      - name: Set Image Version in Environment Variable
-        run: |
-          echo "IMAGE_VERSION=${{ steps.build.outputs.imageid }}"
-          echo "IMAGE_VERSION=${{ steps.build.outputs.imageid }}" >> $GITHUB_ENV
+        env:
+          IMAGE_NAME: "ghcr.io/${{ github.repository }}@${{ steps.build.outputs.imageid }}"
 
   deploy:
     needs: build-and-push-image
@@ -79,7 +80,7 @@ jobs:
           mkdir -p ${{ github.repository }}
           cd ${{ github.repository }}
           ls -l
-          echo "IMAGE_VERSION=${{ env.IMAGE_VERSION }}" >> .env
+          echo "IMAGE_NAME=${{ env.IMAGE_NAME }}" > .env
           docker compose down && docker compose up -d
 
       
