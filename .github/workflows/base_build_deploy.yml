@@ -43,6 +43,7 @@ jobs:
       # It uses the `tags` and `labels` parameters to tag and label the image with the output from the "meta" step.
       - name: Build and push container image to registry
         uses: docker/build-push-action@v4
+        id: build
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
@@ -67,7 +68,7 @@ jobs:
           scp -f docker-compose.yaml ${{ secrets.HOST_NAME }}@${{ secrets.USER_NAME }}:${{ github.repository }}
           cd ${{ github.repository }}
           echo "IMAGE_VERSION=${{ env.IMAGE_VERSION }}" >> .env
-          docker-compose down && docker-compose up -d
+          docker compose down && docker compose up -d
         host: ${{ secrets.HOST_NAME }}
         user: ${{ secrets.USER_NAME }}
         key: ${{ secrets.SSH_KEY }}
