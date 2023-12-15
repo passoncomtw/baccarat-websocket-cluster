@@ -60,18 +60,27 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
-    - name: scp docker-compose , down and start container
-      uses: fifsky/ssh-action@master
+    - name: copy file via ssh password
+      uses: appleboy/scp-action@v0.1.4
       with:
-        command: |
+        host: ${{ secrets.HOST_NAME }}
+        username:  ${{ secrets.USER_NAME }}
+        key: ${{ secrets.SSH_KEY }}
+        source: "docker-compose.yml"
+        target: ${{ github.repository }}
+
+    - name: multiple command
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.HOST_NAME }}
+        username:  ${{ secrets.USER_NAME }}
+        key: ${{ secrets.SSH_KEY }}
+        script: |
           mkdir -p ${{ github.repository }}
-          scp -f docker-compose.yml ${{ secrets.HOST_NAME }}@${{ secrets.USER_NAME }}:${{ github.repository }}
           cd ${{ github.repository }}
+          ls -l
           echo "IMAGE_VERSION=${{ env.IMAGE_VERSION }}" >> .env
           docker compose down && docker compose up -d
-        host: ${{ secrets.HOST_NAME }}
-        user: ${{ secrets.USER_NAME }}
-        key: ${{ secrets.SSH_KEY }}
+
       
 
