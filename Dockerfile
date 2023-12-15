@@ -10,5 +10,8 @@ COPY . .
 # 下載應用程式的相依套件
 RUN go build .
 
+# 預定起在3000port
+EXPOSE 3000
+
 # 指定容器啟動時要執行的命令
 CMD ["./gowebsocket"]

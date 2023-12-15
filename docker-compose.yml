@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  backend-service:
+    image: ${GOWEBSOCKET_IMAGE_NAME:-your-gowebsocket-image}
+    ports:
+      - "3000:3000"
+    env_file: .env # 指定讀取的.env檔案
+    networks:
+      - backend-service
+
+networks:
+  backend-service:
+    driver: bridge

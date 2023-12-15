@@ -2,7 +2,9 @@ name: Create and publish a Docker image
 
 on:
   push:
-    branches: ['main']
+    branches:
+    - "main"
+    - "develop"
     tags:
       - 'v*'
 # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
@@ -15,7 +17,6 @@ jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
 
-      # 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -47,3 +48,28 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           # labels: ${{ steps.meta.outputs.labels }}
+      - name: Set Image Version in Environment Variable
+        run: |
+          echo "IMAGE_VERSION=${{ steps.build.outputs.imageid }}"
+          echo "IMAGE_VERSION=${{ steps.build.outputs.imageid }}" >> $GITHUB_ENV
+
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: scp docker-compose , down and start container
+      uses: fifsky/ssh-action@master
+      with:
+        command: |
+          mkdir -p ${{ github.repository }}
+          scp -f docker-compose.yaml ${{ secrets.HOST_NAME }}@${{ secrets.USER_NAME }}:${{ github.repository }}
+          cd ${{ github.repository }}
+          echo "IMAGE_VERSION=${{ env.IMAGE_VERSION }}" >> .env
+          docker-compose down && docker-compose up -d
+        host: ${{ secrets.HOST_NAME }}
+        user: ${{ secrets.USER_NAME }}
+        key: ${{ secrets.SSH_KEY }}
+      
+
