@@ -4,7 +4,6 @@ on:
   push:
     branches:
     - "main"
-    - "develop"
     tags:
       - 'v*'
 
@@ -57,7 +56,7 @@ jobs:
         id: identify
         run: |
           # use bash variable expression to get the substring
-          export IMAGE_NAME="ghcr.io/${{ github.repository }}@${{ steps.build.outputs.imageid }}"
+          export IMAGE_NAME="ghcr.io/${{ github.repository }}:main"
           echo "${IMAGE_NAME}"
           echo "::set-output name=image_name::${IMAGE_NAME}"
     outputs:
