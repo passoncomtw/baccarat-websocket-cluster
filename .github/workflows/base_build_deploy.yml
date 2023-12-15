@@ -7,8 +7,7 @@ on:
     - "develop"
     tags:
       - 'v*'
-env:
-  IMAGE_NAME: ''
+
 
 # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
 permissions:
@@ -52,8 +51,18 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           # labels: ${{ steps.meta.outputs.labels }}
-        env:
-          IMAGE_NAME: "ghcr.io/${{ github.repository }}@${{ steps.build.outputs.imageid }}"
+        # env:
+        #   IMAGE_NAME: "ghcr.io/${{ github.repository }}@${{ steps.build.outputs.imageid }}"
+      - name : identify name
+        id: identify
+        run: |
+          # use bash variable expression to get the substring
+          export IMAGE_NAME="ghcr.io/${{ github.repository }}@${{ steps.build.outputs.imageid }}"
+          echo "${IMAGE_NAME}"
+          echo "::set-output name=image_name::${IMAGE_NAME}"
+    outputs:
+      image_name: ${{ steps.identify.outputs.image_name }}
+
 
   deploy:
     needs: build-and-push-image
@@ -80,7 +89,7 @@ jobs:
           mkdir -p ${{ github.repository }}
           cd ${{ github.repository }}
           ls -l
-          echo "IMAGE_NAME=${{ env.IMAGE_NAME }}" > .env
+          echo "IMAGE_NAME=${{ needs.build-and-push-image.outputs.image_name }}" > .env
           docker compose down && docker compose up -d
 
       
