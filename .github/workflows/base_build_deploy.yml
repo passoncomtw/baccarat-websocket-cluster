@@ -78,16 +78,16 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         source: "docker-compose.yml"
         target: ${{ github.repository }}
-    - name: Log in to Docker Registry
-      run: echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u USERNAME --password-stdin
-      
-    - name: Create folder and go down ,start command to renew container
+
+
+    - name: Log in to Docker Registry and Create folder and go down ,start command to renew container
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.HOST_NAME }}
         username:  ${{ secrets.USER_NAME }}
         key: ${{ secrets.SSH_KEY }}
         script: |
+          echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u USERNAME --password-stdin
           mkdir -p ${{ github.repository }}
           cd ${{ github.repository }}
           ls -l
