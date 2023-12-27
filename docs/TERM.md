@@ -1,7 +1,60 @@
 ## 語法特性
 
-1. 大寫開頭代表可匯出
+1. 大寫開頭代表可匯出,小寫就是指通於該package,被import到別的package會看不到
 2. 大括號用來表示控制流程的範圍，例如 if 語句、for 語句、switch 語句和函數。
+3. 基本上所有東西都要定義type,除非不確定是哪種型別可以用 interface{} 來接任任何type.
+
+```golang
+type MyInterface interface{}
+
+func myFunction(value MyInterface) {
+// 做一些操作
+}
+```
+
+4. for迴圈需要取key,value 例如list跟map,要用range,`for i, v := range slice{}`,一般取值可以用`for i := 0; i < len(arr); i++ {}`
+
+5. 閉包用來return function,主要用於保留上下文,應用情境:計數器.
+6. make 函數主要用於創建切片、映射和通道，並初始化它們的內部數據結構, `make(Type, size)`
+
+```go
+slice := make([]int, 5) // 創建一個包含5個元素的整數切片
+mymap := make(map[string]int) // 創建一個字符串到整數的映射
+ch := make(chan int) // 創建一個整數通道
+slice := make([]int, 0, 10) // 創建一個初始大小為0，容量為10的整數切片
+
+```
+
+7. 	map內建判斷 如果沒有該key會在第二個return值給false
+	`if _, ok := m.clients[client]; ok { do something}`, `csharpRating, ok := rating["C#"]`
+8. 通道使用原理,定義丟進來的物件型態, 資料傳入 `chan <- 物件`, 資料傳出有多個方式 `t1 := <-c`, `for t1:= range c {}`,
+
+
+```golang
+for {
+    select {
+        # 通道一
+        case value:= <- c:
+        # 使用通道一給進來的值做switch case判斷對應處理
+        switch value {
+        case "add":
+            doSomething
+        case "remove":
+            doOtherthing
+        }
+        # 通道二
+        case value2:= <-c2:
+        # 通道二值判斷
+        switch value2 {
+            case "hekko":
+                doHekko
+            case "hello":
+                doHello
+        }
+
+    }
+}
+```
 
 ## for 寶典
 
@@ -78,7 +131,7 @@ func main() {
 	fmt.Println("我要開始睡")
 	time.Sleep(5*time.Second)
 	t2 := time.Now()
-	// 接收端不要用goroutine 不然整個程式跑完就中止了
+	// 接收端不要用goroutine 不然整個程式跑完就中止了 不然就要循環通道
 	t1 := <-c
 	fmt.Println("總執行時間為:",t2.Sub(t1))
 }

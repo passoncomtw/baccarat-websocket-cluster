@@ -52,12 +52,7 @@ func (c *Client) GetClientEvent() {
 		if err := c.manager.routeEvent(data, c); err != nil {
 			log.Println("No handle to deal with ", err)
 		}
-		// 透過routevent網對應的地方送,看有沒有報錯
-		// 這邊測試把資料丟到通道,另外一邊用goroutine執行的循環通道理論上會接資料打印
-		// for wsClient := range c.manager.clients {
-		// 	wsClient.egress <- payload
-		// 	log.Println("go to write messages")
-		// }
+
 	}
 }
 

@@ -33,8 +33,11 @@ func NewManager() *Manager {
 	m := &Manager{
 		clients:  make(ClientMap),
 		handlers: make(map[string]EventHandler),
+		// 一個處理客戶數量的通道
+		clienQuantityOperation: make(chan ClientQuantityOperation),
 	}
 	m.setupEventHandlers()
+	go m.handleClientQuantityOperation()
 	return m
 }
 
@@ -87,30 +90,36 @@ func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 	client := NewClient(conn, m)
 	// 將client加入manager管理內,後續ws要刪除或新增會透過manager操作
 	m.addClient(client)
-	// 確定新增client以後就開始讀客戶給的東西囉
-	// Start the read / write processes
+	// 確定新增client以後就開始讀客戶js給的東西囉
 	go client.GetClientEvent()
+	//
 	go client.SendMessages()
 	log.Println("ServeWs結束囉,不過因為主進程還在跑所以goroutine還活著")
 }
 
 func (m *Manager) addClient(client *Client) {
-	// 讓多個goroutine依順序寫入
-	m.Lock()
-	defer m.Unlock()
 
-	// 把client加進來到Map 對應bool拿來做刪除確認
-	m.clients[client] = true
-
+	m.clienQuantityOperation <- ClientQuantityOperation{action: "add", client: client}
 }
 
 func (m *Manager) removeClient(client *Client) {
 	// 讓多個goroutine依順序寫入
-	m.Lock()
-	defer m.Unlock()
-	// map內建判斷 如果沒有該ｋｅｙ 會在第二個return值給false
-	if _, ok := m.clients[client]; ok {
-		client.connection.Close()
-		delete(m.clients, client)
+	m.clienQuantityOperation <- ClientQuantityOperation{action: "remove", client: client}
+}
+
+func (m *Manager) handleClientQuantityOperation() {
+	for {
+		select {
+		case operation := <-m.clienQuantityOperation:
+			switch operation.action {
+			case "add":
+				m.clients[operation.client] = true
+			case "remove":
+				if _, ok := m.clients[operation.client]; ok {
+					operation.client.connection.Close()
+					delete(m.clients, operation.client)
+				}
+			}
+		}
 	}
 }

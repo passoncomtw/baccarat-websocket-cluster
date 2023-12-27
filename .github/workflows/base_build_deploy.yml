@@ -58,6 +58,7 @@ jobs:
           # use bash variable expression to get the substring
           export IMAGE_NAME="ghcr.io/${{ github.repository }}:main"
           echo "${IMAGE_NAME}"
+          echo "${{ steps.meta.outputs.tags }}"
           echo "::set-output name=image_name::${IMAGE_NAME}"
     outputs:
       image_name: ${{ steps.identify.outputs.image_name }}
