@@ -1,8 +1,8 @@
 ## 語法特性
 
-1. 大寫開頭代表可匯出,小寫就是指通於該package,被import到別的package會看不到
+1. 大寫開頭代表可匯出,小寫就是指通於該 package,被 import 到別的 package 會看不到
 2. 大括號用來表示控制流程的範圍，例如 if 語句、for 語句、switch 語句和函數。
-3. 基本上所有東西都要定義type,除非不確定是哪種型別可以用 interface{} 來接任任何type.
+3. 基本上所有東西都要定義 type,除非不確定是哪種型別可以用 interface{} 來接任任何 type.
 
 ```golang
 type MyInterface interface{}
@@ -12,9 +12,9 @@ func myFunction(value MyInterface) {
 }
 ```
 
-4. for迴圈需要取key,value 例如list跟map,要用range,`for i, v := range slice{}`,一般取值可以用`for i := 0; i < len(arr); i++ {}`
+4. for 迴圈需要取 key,value 例如 list 跟 map,要用 range,`for i, v := range slice{}`,一般取值可以用`for i := 0; i < len(arr); i++ {}`
 
-5. 閉包用來return function,主要用於保留上下文,應用情境:計數器.
+5. 閉包用來 return function,主要用於保留上下文,應用情境:計數器.
 6. make 函數主要用於創建切片、映射和通道，並初始化它們的內部數據結構, `make(Type, size)`
 
 ```go
@@ -25,10 +25,10 @@ slice := make([]int, 0, 10) // 創建一個初始大小為0，容量為10的整�
 
 ```
 
-7. 	map內建判斷 如果沒有該key會在第二個return值給false
-	`if _, ok := m.clients[client]; ok { do something}`, `csharpRating, ok := rating["C#"]`
-8. 通道使用原理,定義丟進來的物件型態, 資料傳入 `chan <- 物件`, 資料傳出有多個方式 `t1 := <-c`, `for t1:= range c {}`,
-
+7.                    map內建判斷 如果沒有該key會在第二個return值給false
+    `if _, ok := m.clients[client]; ok { do something}`, `csharpRating, ok := rating["C#"]`
+8.  通道使用原理,定義丟進來的物件型態, 資料傳入 `chan <- 物件`, 資料傳出有多個方式 `t1 := <-c`, `for t1:= range c {}`,通道有兩個參數,第二個參數可以判斷通道是否關閉.
+    主要用是否宣告及賦予值作為方向依據,有`:=`代表是通道中拿出資料.
 
 ```golang
 for {
@@ -54,6 +54,15 @@ for {
 
     }
 }
+```
+
+9.  golang 的 function 執行不能帶入 key, value 也就是
+
+```go
+// 這樣用會報錯
+client := newClient(hub: hub, conn: conn, send: make(chan []byte, 256))
+// 這樣才對
+client := newClient(hub, conn, make(chan []byte, 256))
 ```
 
 ## for 寶典
@@ -106,6 +115,9 @@ for k, v := range map {
 
 ## 通道使用
 
+通道使用是為了並發程式執行時,對共享變數做修改造成未預期狀態,通道提供共享資源的同步機制,所以看到通道就代表這段 code 會對共享資源做操作.
+是相對於用 mutex 的鎖的方式的另一種解法
+
 1. 任何傳送將會被阻塞，直到資料被讀出
    白話解釋：
    假設有兩個人 A 和 B，A 要給 B 一張紙。A 拿著紙，準備給 B 時，發現 B 還沒有準備好接收。因此，A 只能站在那裡等待 B 準備好。在 A 等待的這段時間內，A 不會做任何事情，也不會消耗任何資源。
@@ -119,25 +131,41 @@ import (
 	"fmt"
 	"time"
 )
+
 func main() {
-    c := make(chan time.Time)
-    fmt.Println("start test")
-	// 送資料過來的那一端要用goroutine
-    go func() {
-        t1 := time.Now()
-        fmt.Println("通道載送時間過來囉",t1)
-        c <- t1
-    }()
-	fmt.Println("我要開始睡")
-	time.Sleep(5*time.Second)
-	t2 := time.Now()
-	// 接收端不要用goroutine 不然整個程式跑完就中止了 不然就要循環通道
-	t1 := <-c
-	fmt.Println("總執行時間為:",t2.Sub(t1))
+	// 創建一個通道來存儲要對共享資源進行的操作
+	ch := make(chan int)
+
+	// 創建一個 goroutine 來處理共享資源的修改
+	go func() {
+		var sharedResource int
+		for {
+			select {
+			case value := <-ch:
+				// 修改共享資源
+				sharedResource += value
+				fmt.Printf("進行了修改，目前值：%d\n", sharedResource)
+				// 模擬一些計算時間
+				time.Sleep(time.Millisecond * 100)
+			}
+		}
+	}()
+
+	// 向通道發送多個操作以修改共享資源
+	for i := 0; i < 5; i++ {
+		ch <- 1
+	}
+
+	// 等待一段時間，以確保所有操作完成
+	time.Sleep(time.Second)
+
+	// 關閉通道
+	close(ch)
 }
+
 ```
 
-錯誤示範:在 goroutine 外面做 for 迴圈,會導致並行同步出問題,也不到何時該 close 通道.
+以下是舉例錯誤示範:在 goroutine 外面做 for 迴圈,會導致並行同步出問題,也不到何時該 close 通道.
 
 ```go
 package main
@@ -167,7 +195,7 @@ func main() {
 }
 ```
 
-正確寫法: 在 goroutine 裡面寫 for 迴圈依序阻塞的往通道給資料！
+相對於上面的錯誤示範,這邊提供比較正確的寫法: 在 goroutine 裡面寫 for 迴圈依序阻塞的往通道給資料！
 
 ```go
 package main
@@ -316,6 +344,9 @@ Anonymous Field（匿名字段）： A field in a struct that doesn't have a spe
 
 ### 物件
 
+1. 在 Go 中，如果您将一个对象传递给函数或方法，实际上是将对象的副本传递给了函数或方法，而不是对象本身。这意味着，如果在函数或方法内部修改了对象的属性，实际上是修改了副本的属性.
+2. 在 Go 中，創建新的結構（物件）時，不需要為結構中的所有屬性都提供值。如果您不給某個屬性指定初始值，那麼該屬性將根據其類型的默認值進行初始化。默認值取決於屬性的類型，例如，數字類型的默認值是 0，字符串類型的默認值是空字符串 ""
+
 ```
 
 // 宣告一個新的型別
@@ -372,27 +403,49 @@ func main(){
 
 匿名函示
 
-```
-func withFile(filename string, callback func(file *File) error) error {
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+)
+
+// withFile 函數接受一個文件名和一個回調函數，該函數會打開文件並在操作完成後關閉它。
+// 回調函數接受一個文件指針並返回一個錯誤。
+func withFile(filename string, callback func(file *os.File) error) error {
+    // 打開指定文件
     file, err := os.Open(filename)
     if err != nil {
         return err
     }
-    defer file.Close()
+    defer file.Close() // 確保在函數返回前關閉文件
 
+    // 執行回調函數並返回可能的錯誤
     return callback(file)
 }
 
 func main() {
-    err := withFile("example.txt", func(file *File) error {
-        // 使用 file 執行一些操作
+    // 調用 withFile 函數，並傳遞一個匿名函數作為回調
+    err := withFile("example.txt", func(file *os.File) error {
+        // 在這裡進行文件讀取
+        data := make([]byte, 100) // 創建一個緩衝區來讀取文件內容
+        bytesRead, err := file.Read(data)
+        if err != nil {
+            return err
+        }
+
+        // 將讀取的內容輸出到標準輸出
+        fmt.Printf("Read %d bytes from file: %s\n", bytesRead, string(data))
         return nil
     })
 
+    // 檢查錯誤
     if err != nil {
         fmt.Println("Error:", err)
     }
 }
+
 ```
 
 ## interfacee 功用
