@@ -41,10 +41,8 @@ type egressPayloadEvent struct {
 	ingressMessageEvent
 	SentTime time.Time `json:"sentTime"`
 }
-// 定義handler function格式
-type EventHandler func(event Event, c *Client) error
 
-func sendMessageEvent(event Event, c *Client) error{
+func sendMessageEvent(event *Event, c *Client) error{
 	// 做空物件給json賦予值
 	var ingressMessage ingressMessageEvent
 	// 把近來資訊做解析
@@ -65,6 +63,7 @@ func sendMessageEvent(event Event, c *Client) error{
 	// 包要出去完整的json
 	// 先做 struct of Event
 	egressEvent:=Event{Payload: payload,Type: egressMessageType}
+	// struct解到json (會是byte格式)
 	egressMessage,err:=json.Marshal(egressEvent)
 	if err != nil{
 		return fmt.Errorf("failed to marshal  message: %v", err)

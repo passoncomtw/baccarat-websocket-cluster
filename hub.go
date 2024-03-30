@@ -1,9 +1,12 @@
 package main
 
+import (
+	"log"
+	"fmt"
+)
 
 // function eventHandler for different type
-type eventHandler func(string) error
-
+type eventHandler func(*Event,*Client) error
 
 type Hub struct {
 
@@ -24,12 +27,10 @@ type Hub struct {
 	// handler different type
 	handlers map[string]eventHandler
 }
+// 物件方法加route event
 
 
-// 要用雙引號表示字串
-func(hub *Hub) setEventHandlers(){
-	hub.handlers["send_message"]= func(s string) error {}
-}
+
 
 func newHub() *Hub {
 	return &Hub{
@@ -37,10 +38,32 @@ func newHub() *Hub {
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		clients:    make(map[*Client]bool),
+		//panic: assignment to entry in nil map 不先進行初始化會遇到的報錯,要先初始化才能加key
+		// https://yourbasic.org/golang/gotcha-assignment-entry-nil-map/
+		handlers: make(map[string]eventHandler),
 	}
 }
+// 物件方法加setEventHandlers
+// 要用雙引號表示字串
+func(h *Hub) setEventHandlers(){
+	h.handlers["send_message"]= sendMessageEvent
+}
 
+func(h *Hub) routeEvent(event *Event,c *Client)error{
+	// 先取event的type對應到handler
+	if handler,ok:= h.handlers[event.Type]; ok{
+		// 執行handler function,如果return err非nil則執行
+		if err:=handler(event,c);err!=nil{
+			log.Print("panic to handle ",event.Type)
+			return err
+		}
+		return nil
+	} else {
+		return fmt.Errorf("unsupported type: %s", event.Type)
 
+	}
+	
+}
 
 // go function
 func (h *Hub) run() {

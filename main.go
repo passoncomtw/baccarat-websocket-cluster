@@ -28,6 +28,8 @@ func main() {
 	flag.Parse()
 	// 建立Hub
 	hub:=newHub()
+	// 建立預定意的handler
+	hub.setEventHandlers()
 	// 要把run 跑下去go routone ,
 	// 他會把通道規則包含註冊那些建立出來(register, unregister...)
 	go hub.run()

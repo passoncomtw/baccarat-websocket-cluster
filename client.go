@@ -1,10 +1,11 @@
 package main
 
-
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"time"
+	"fmt"
 	"github.com/gorilla/websocket"
 )
 
@@ -67,17 +68,25 @@ func (c *Client) readPump() {
 	// 設定心跳
 	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
-		messageType, message, err := c.conn.ReadMessage()
+		_, message, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error: %v", err)
 			}
 			break
 		}
-		log.Println("MessageType: ", messageType)
-		log.Println("Message: ", message)
 		// message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.hub.broadcast <- message
+		// routeEvent
+		var data Event
+		// json格式解析到struct
+		if err:=json.Unmarshal(message,&data); err != nil {
+			log.Printf("error: %v", err)
+		}
+		fmt.Print(string(data.Payload))
+		// 把type解出來放到route event 後續會透過route把處理後訊息透過writePump送回給client
+		if err:=c.hub.routeEvent(&data,c); err!=nil {
+			log.Printf("error: %v",err)
+		}
 	}
 }
 

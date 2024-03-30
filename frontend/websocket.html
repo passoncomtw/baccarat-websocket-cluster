@@ -137,8 +137,9 @@
         if (event.type === undefined) {
           alert("no 'type' field in event");
         }
+        console.log(event);
         switch (event.type) {
-          case "new_message":
+          case "newMessage":
             console.log("type back is new_message");
             // Format payload
             const messageEvent = Object.assign(
@@ -147,8 +148,6 @@
             );
             appendChatMessage(messageEvent);
             break;
-          case "send_message":
-            console.log("type back is send_message");
           default:
             alert("unsupported message type");
             break;
@@ -161,14 +160,14 @@
         constructor(message, from, sent) {
           this.message = message;
           this.from = from;
-          this.sent = sent;
+          this.sentTime = sent;
         }
       }
       /**
        * appendChatMessage takes in new messages and adds them to the chat
        * */
       function appendChatMessage(messageEvent) {
-        var date = new Date(messageEvent.sent);
+        var date = new Date(messageEvent.sentTime);
         // format message
         const formattedMsg = `${date.toLocaleString()}: ${
           messageEvent.message
